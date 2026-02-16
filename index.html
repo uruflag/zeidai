@@ -82,6 +82,14 @@ button:hover {
     background: #ff3300;
 }
 
+/* ★ 成績メッセージのスタイル（太字＋ボタン色） */
+#scoreBox {
+    margin-top: 20px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #ff6600;
+}
+
 @media screen and (max-width: 600px) {
     button {
         width: 100%;
@@ -95,7 +103,7 @@ button:hover {
 
 <body>
 
-<header>🔥 合格への練習問題V 🔥</header>
+<header>🔥 合格への練習問題W 🔥</header>
 
 <div id="categorySelect" style="margin-top:30px;">
     <h2>カテゴリーを選択</h2>
@@ -220,7 +228,10 @@ function startQuizWithCustomCount() {
 
     list = shuffle(list);
 
-    if (count > list.length) count = list.length;
+    if (count > list.length) {
+        alert("問題数が多すぎるため、最大の " + list.length + " 問に設定しました。");
+        count = list.length;
+    }
 
     quizList = list.slice(0, count);
 
@@ -242,7 +253,7 @@ function showQuestion() {
 
     let choiceObjects = q.choices.map(text => ({
         text,
-        isCorrect: (text === q.correctText) // ★ a1 かどうかで判定
+        isCorrect: (text === q.correctText)
     }));
 
     choiceObjects = shuffle(choiceObjects);
@@ -291,13 +302,20 @@ function nextQuestion() {
     }
 }
 
-/* ▼ 成績表示 */
+/* ▼ 成績表示（太字＋ボタン色） */
 function showScore() {
     const total = quizList.length;
     const rate = Math.round((correctCount / total) * 100);
 
-    document.getElementById("scoreBox").innerHTML =
-        `正解数：${correctCount}/${total}（${rate}%）`;
+    let msg = `正解数：${correctCount}/${total}（${rate}%）<br>`;
+
+    if (rate >= 80) {
+        msg += `<span style="color:#ff6600; font-weight:bold;">🔥 この調子で合格をつかもう！</span>`;
+    } else {
+        msg += `<span style="color:#ff6600; font-weight:bold;">⚠️ 合格ライン 80% をキープしよう！</span>`;
+    }
+
+    document.getElementById("scoreBox").innerHTML = msg;
 }
 
 /* ▼ カテゴリーへ戻る */
