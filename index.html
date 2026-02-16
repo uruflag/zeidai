@@ -95,7 +95,7 @@ button:hover {
 
 <body>
 
-<header>🔥 合格への練習問題G 🔥</header>
+<header>🔥 合格への練習問題Q 🔥</header>
 
 <div id="categorySelect" style="margin-top:30px;">
     <h2>カテゴリーを選択</h2>
@@ -152,7 +152,8 @@ function parseTSV(text) {
     const data = [];
 
     for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].split("\t");
+        const cols = lines[i].replace(/^\uFEFF/, "").split("\t"); // BOM除去
+
         if (cols.length < 8) continue;
 
         const [category, q, a1, a2, a3, a4, correct, explain] = cols;
@@ -316,5 +317,6 @@ function goToCategory() {
 </script>
 
 </body>
-
 </html>
+
+
