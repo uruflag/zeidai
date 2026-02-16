@@ -25,19 +25,18 @@
         letter-spacing: 2px;
     }
 
-    /* ★ container の左右余白を完全にゼロ化（ズレ防止の決定打） */
+    /* ★ container の左右余白ゼロ（ズレ防止） */
     #container {
         width: 100%;
         max-width: 700px;
         margin: 0 auto;
-        padding: 0; /* ← 左右のズレ原因を完全に排除 */
+        padding: 0;
         box-sizing: border-box;
         background: white;
         border-radius: 10px;
         display: none;
     }
 
-    /* 内部の余白は “中身側” にだけ付ける */
     .inner {
         padding: 20px;
         box-sizing: border-box;
@@ -167,14 +166,12 @@
 
         <div id="resultBox"></div>
 
-        <!-- 1行目 -->
         <button onclick="prevQuestion()">前の問題</button>
         <button onclick="nextQuestion()">次の問題</button>
         <button onclick="showScore()">成績</button>
 
         <br><br>
 
-        <!-- 2行目 -->
         <button onclick="goToCategory()">挑戦開始（カテゴリーへ戻る）</button>
 
         <div id="scoreBox"></div>
@@ -196,7 +193,7 @@ fetch("questions.tsv")
         createCategoryButtons();
     });
 
-/* ▼ TSV パース ▼ */
+/* ▼ TSV パース（正解番号に対応） ▼ */
 function parseTSV(text) {
     const lines = text.trim().split("\n");
     const data = [];
@@ -208,14 +205,14 @@ function parseTSV(text) {
             category,
             question: q,
             choices: [a1, a2, a3, a4],
-            correct,
+            correctIndex: Number(correct) - 1, // ★ 1〜4 → 0〜3
             explain
         });
     }
     return data;
 }
 
-/* ▼ カテゴリーボタン自動生成 ▼ */
+/* ▼ カテゴリーボタン生成 ▼ */
 function createCategoryButtons() {
     const area = document.getElementById("categoryButtons");
     area.innerHTML = "";
@@ -235,7 +232,7 @@ function createCategoryButtons() {
     area.appendChild(totalBtn);
 }
 
-/* ▼ カテゴリー選択後：問題数入力画面へ ▼ */
+/* ▼ カテゴリー選択後 ▼ */
 function startCategory(cat) {
     currentCategory = cat;
 
@@ -243,7 +240,7 @@ function startCategory(cat) {
     document.getElementById("questionCountSelect").style.display = "block";
 }
 
-/* ▼ 高品質シャッフル ▼ */
+/* ▼ シャッフル ▼ */
 function shuffle(array) {
     for (let i = array.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -252,7 +249,7 @@ function shuffle(array) {
     return array;
 }
 
-/* ▼ 問題数を自由入力して開始 ▼ */
+/* ▼ 問題数入力後に開始 ▼ */
 function startQuizWithCustomCount() {
     const input = document.getElementById("questionCountInput").value;
     let count = parseInt(input);
@@ -287,37 +284,47 @@ function startQuizWithCustomCount() {
     showQuestion();
 }
 
-/* ▼ 問題表示 ▼ */
+/* ▼ 問題表示（正解番号対応版） ▼ */
 function showQuestion() {
     const q = quizList[index];
     document.getElementById("categoryTitle").textContent = "【" + currentCategory + "】";
     document.getElementById("questionText").textContent = (index + 1) + ". " + q.question;
 
-    const shuffledChoices = shuffle([...q.choices]);
+    // ★ 選択肢に「正解フラグ」を付ける
+    let choiceObjects = q.choices.map((text, i) => ({
+        text: text,
+        isCorrect: (i === q.correctIndex)
+    }));
+
+    // ★ フラグごとシャッフル
+    choiceObjects = shuffle(choiceObjects);
+
     const choicesDiv = document.getElementById("choices");
     choicesDiv.innerHTML = "";
 
-    shuffledChoices.forEach(choice => {
+    choiceObjects.forEach(obj => {
         const div = document.createElement("div");
         div.className = "choice";
-        div.textContent = choice;
-        div.onclick = () => checkAnswer(choice, q);
+        div.textContent = obj.text;
+        div.onclick = () => checkAnswer(obj.isCorrect, q);
         choicesDiv.appendChild(div);
     });
 
     document.getElementById("resultBox").style.display = "none";
 }
 
-/* ▼ 解答チェック ▼ */
-function checkAnswer(choice, q) {
+/* ▼ 解答チェック（正解番号対応） ▼ */
+function checkAnswer(isCorrect, q) {
     const resultBox = document.getElementById("resultBox");
     resultBox.style.display = "block";
 
-    if (choice === q.correct) {
+    if (isCorrect) {
         resultBox.innerHTML = "<b>正解！</b><br>" + q.explain;
         correctCount++;
     } else {
-        resultBox.innerHTML = "<b>不正解…</b><br>正解は「" + q.correct + "」<br>" + q.explain;
+        const correctText = q.choices[q.correctIndex];
+        resultBox.innerHTML =
+            "<b>不正解…</b><br>正解は「" + correctText + "」<br>" + q.explain;
     }
 }
 
@@ -354,7 +361,7 @@ function showScore() {
     scoreBox.innerHTML = msg;
 }
 
-/* ▼ カテゴリー選択画面へ戻る ▼ */
+/* ▼ カテゴリーへ戻る ▼ */
 function goToCategory() {
     document.getElementById("container").style.display = "none";
     document.getElementById("questionCountSelect").style.display = "none";
