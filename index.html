@@ -95,7 +95,7 @@ button:hover {
 
 <body>
 
-<header>🔥 合格への練習問題Q 🔥</header>
+<header>🔥 合格への練習問題V 🔥</header>
 
 <div id="categorySelect" style="margin-top:30px;">
     <h2>カテゴリーを選択</h2>
@@ -146,23 +146,22 @@ fetch("questions.tsv")
         createCategoryButtons();
     });
 
-/* ▼ TSV パース（正解＝文章） */
+/* ▼ TSV パース（正解＝a1） */
 function parseTSV(text) {
     const lines = text.trim().split("\n");
     const data = [];
 
     for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].replace(/^\uFEFF/, "").split("\t"); // BOM除去
+        const cols = lines[i].replace(/^\uFEFF/, "").split("\t");
+        if (cols.length < 7) continue;
 
-        if (cols.length < 8) continue;
-
-        const [category, q, a1, a2, a3, a4, correct, explain] = cols;
+        const [category, q, a1, a2, a3, a4, explain] = cols;
 
         data.push({
             category,
             question: q,
             choices: [a1, a2, a3, a4],
-            correctText: correct,
+            correctText: a1,   // ★ 正解は必ず a1
             explain
         });
     }
@@ -243,7 +242,7 @@ function showQuestion() {
 
     let choiceObjects = q.choices.map(text => ({
         text,
-        isCorrect: (text === q.correctText)
+        isCorrect: (text === q.correctText) // ★ a1 かどうかで判定
     }));
 
     choiceObjects = shuffle(choiceObjects);
@@ -318,5 +317,3 @@ function goToCategory() {
 
 </body>
 </html>
-
-
