@@ -25,7 +25,6 @@
         letter-spacing: 2px;
     }
 
-    /* ★ container の左右余白ゼロ（ズレ防止） */
     #container {
         width: 100%;
         max-width: 700px;
@@ -95,9 +94,7 @@
         color: #cc0000;
     }
 
-    /* ▼ スマホ用レイアウト ▼ */
     @media screen and (max-width: 600px) {
-
         header {
             font-size: 22px;
             padding: 15px;
@@ -139,15 +136,13 @@
 
 <body>
 
-<header>🔥 合格への練習問題B 🔥</header>
+<header>🔥 合格への練習問題D 🔥</header>
 
-<!-- ▼ カテゴリー選択画面 ▼ -->
 <div id="categorySelect" style="margin-top:30px;">
     <h2>カテゴリーを選択</h2>
     <div id="categoryButtons"></div>
 </div>
 
-<!-- ▼ 問題数入力画面 ▼ -->
 <div id="questionCountSelect" style="display:none; margin-top:30px;">
     <h2>問題数を入力</h2>
     <input id="questionCountInput" type="number" min="1" placeholder="例：5"
@@ -156,7 +151,6 @@
     <button onclick="startQuizWithCustomCount()">開始する</button>
 </div>
 
-<!-- ▼ クイズ画面 ▼ -->
 <div id="container">
     <div class="inner">
         <h2 id="categoryTitle"></h2>
@@ -193,19 +187,24 @@ fetch("questions.tsv")
         createCategoryButtons();
     });
 
-/* ▼ TSV パース（正解番号に対応） ▼ */
+/* ▼ TSV パース（正解＝文章） ▼ */
 function parseTSV(text) {
     const lines = text.trim().split("\n");
     const data = [];
 
     for (let i = 1; i < lines.length; i++) {
-        const [category, q, a1, a2, a3, a4, correct, explain] = lines[i].split("\t");
+        const cols = lines[i].split("\t");
+
+        // 列数が足りない行はスキップ（安全策）
+        if (cols.length < 8) continue;
+
+        const [category, q, a1, a2, a3, a4, correct, explain] = cols;
 
         data.push({
             category,
             question: q,
             choices: [a1, a2, a3, a4],
-            correctIndex: Number(correct) - 1, // ★ 1〜4 → 0〜3
+            correctText: correct,   // ★ 正解の文章そのもの
             explain
         });
     }
@@ -284,19 +283,18 @@ function startQuizWithCustomCount() {
     showQuestion();
 }
 
-/* ▼ 問題表示（正解番号対応版） ▼ */
+/* ▼ 問題表示（正解＝文章方式） ▼ */
 function showQuestion() {
     const q = quizList[index];
     document.getElementById("categoryTitle").textContent = "【" + currentCategory + "】";
     document.getElementById("questionText").textContent = (index + 1) + ". " + q.question;
 
-    // ★ 選択肢に「正解フラグ」を付ける
-    let choiceObjects = q.choices.map((text, i) => ({
+    // 選択肢に「これは正解か？」フラグを付ける
+    let choiceObjects = q.choices.map(text => ({
         text: text,
-        isCorrect: (i === q.correctIndex)
+        isCorrect: (text === q.correctText)
     }));
 
-    // ★ フラグごとシャッフル
     choiceObjects = shuffle(choiceObjects);
 
     const choicesDiv = document.getElementById("choices");
@@ -313,18 +311,18 @@ function showQuestion() {
     document.getElementById("resultBox").style.display = "none";
 }
 
-/* ▼ 解答チェック（正解番号対応） ▼ */
+/* ▼ 解答チェック（正解＝文章方式） ▼ */
 function checkAnswer(isCorrect, q) {
     const resultBox = document.getElementById("resultBox");
     resultBox.style.display = "block";
 
     if (isCorrect) {
-        resultBox.innerHTML = "<b>正解！</b><br>" + q.explain;
+        resultBox.innerHTML = "<b>正解！</b><br>" + (q.explain ?? "");
         correctCount++;
     } else {
-        const correctText = q.choices[q.correctIndex];
+        const correctText = q.correctText ?? "";
         resultBox.innerHTML =
-            "<b>不正解…</b><br>正解は「" + correctText + "」<br>" + q.explain;
+            "<b>不正解…</b><br>正解は「" + correctText + "」<br>" + (q.explain ?? "");
     }
 }
 
