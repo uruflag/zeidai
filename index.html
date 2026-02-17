@@ -1,338 +1,307 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>練習問題サイト</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>徴収法クイズシステム</title>
+    <style>
+        /* --- CSS: 画像のデザインを再現 --- */
+        :root {
+            --primary-blue: #4b66ff;
+            --bg-gray: #f7f8fa;
+            --text-main: #333;
+            --text-sub: #999;
+        }
 
-<style>
-body {
-    font-family: "Yu Gothic", sans-serif;
-    background: #fff8f0;
-    margin: 0;
-    padding: 0;
-    text-align: center;
-    overflow-x: hidden;
-}
+        body {
+            font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
+            background-color: #fff;
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+        }
 
-header {
-    background: linear-gradient(90deg, #ff4d4d, #ff9900);
-    color: white;
-    padding: 20px;
-    font-size: 26px;
-    font-weight: bold;
-}
+        .container {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
 
-#container {
-    width: 100%;
-    max-width: 700px;
-    margin: 0 auto;
-    padding: 0;
-    box-sizing: border-box;
-    background: white;
-    border-radius: 10px;
-    display: none;
-}
+        /* 設定画面 */
+        #setup-area { text-align: center; margin-top: 50px; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        input[type="number"], select { 
+            width: 100%; padding: 12px; margin-top: 8px;
+            border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;
+        }
 
-.inner {
-    padding: 20px;
-    box-sizing: border-box;
-}
+        /* クイズ画面ヘッダー */
+        header { display: flex; align-items: center; margin-bottom: 20px; }
+        .back-arrow { font-size: 24px; cursor: pointer; width: 30px; }
+        h1 { flex: 1; text-align: center; font-size: 1.2rem; margin: 0; }
 
-.choice {
-    background: #f7f7f7;
-    padding: 12px;
-    margin: 10px 0;
-    border-radius: 8px;
-    cursor: pointer;
-    border: 2px solid transparent;
-    transition: 0.2s;
-    width: 100%;
-    box-sizing: border-box;
-    text-align: left;
-}
+        .progress-info {
+            display: flex; justify-content: space-between;
+            color: var(--text-sub); font-size: 0.9rem; margin-bottom: 20px;
+        }
 
-.choice:hover {
-    border: 2px solid #ff9900;
-    background: #fff3e0;
-}
+        /* 問題文 */
+        #question-text {
+            font-size: 1.2rem; line-height: 1.7; font-weight: bold;
+            margin-bottom: 30px; min-height: 100px;
+        }
 
-#resultBox {
-    margin-top: 20px;
-    padding: 15px;
-    background: #fff0e6;
-    border-left: 5px solid #ff6600;
-    display: none;
-    text-align: left;
-}
+        /* 選択肢リスト */
+        #choices { list-style: none; padding: 0; flex-grow: 1; }
+        #choices li {
+            background-color: var(--bg-gray);
+            margin-bottom: 12px; padding: 18px; border-radius: 12px;
+            cursor: pointer; transition: 0.2s; font-size: 1rem;
+        }
+        #choices li:active { background-color: #eceef2; }
+        #choices li.correct { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        #choices li.wrong { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
-button {
-    padding: 10px 20px;
-    margin: 15px 10px;
-    font-size: 16px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    background: #ff6600;
-    color: white;
-    font-weight: bold;
-}
+        /* 解説エリア */
+        #feedback {
+            margin-top: 10px; padding: 15px; border-radius: 12px;
+            background: #fff9e6; border: 1px solid #ffeeba; margin-bottom: 20px;
+        }
+        .feedback-title { font-weight: bold; margin-bottom: 5px; }
 
-button:hover {
-    background: #ff3300;
-}
+        /* 下部ナビゲーション */
+        .controls { display: flex; gap: 10px; margin-top: auto; padding-bottom: 20px; }
+        .btn {
+            flex: 1; padding: 15px; border-radius: 30px; border: none;
+            font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s;
+        }
+        .btn-prev { background-color: #fff; color: #666; border: 1px solid #ddd; }
+        .btn-next { background-color: var(--primary-blue); color: #fff; }
+        .btn:disabled { opacity: 0.3; cursor: not-allowed; }
 
-/* ★ 成績メッセージのスタイル（太字＋ボタン色） */
-#scoreBox {
-    margin-top: 20px;
-    font-size: 20px;
-    font-weight: bold;
-    color: #ff6600;
-}
+        /* 結果画面 */
+        .result-card { text-align: center; margin-top: 40px; }
+        .score-big { font-size: 3rem; font-weight: bold; color: var(--primary-blue); }
+        .alert-msg { font-weight: bold; margin-top: 20px; padding: 15px; border-radius: 8px; }
+        .bg-success { background: #d4edda; color: #155724; }
+        .bg-error { background: #f8d7da; color: #721c24; }
 
-@media screen and (max-width: 600px) {
-    button {
-        width: 100%;
-        margin: 8px 0;
-        padding: 14px;
-        font-size: 18px;
-    }
-}
-</style>
+        .hidden { display: none; }
+    </style>
 </head>
-
 <body>
 
-<header>🔥 合格への練習問題 🔥</header>
+<div class="container">
+    <!-- 1. 初期設定画面 -->
+    <div id="setup-area">
+        <h1>クイズ設定</h1>
+        <div class="input-group">
+            <label>カテゴリー選択</label>
+            <select id="category-select">
+    <option value="quiz_summ.tsv">第1章 総　説</option>
+    <option value="quiz_surv.tsv">第2章 調　査</option>
+    <option value="quiz_seiz.tsv">第3章 差押え</option>
+    <option value="quiz_requ.tsv">第4章 交付要求</option>
+    <option value="quiz_divi.tsv">第5章 換価・配当</option>
+    <option value="quiz_paym.tsv">第6章 納税義務の拡張</option>
+    <option value="quiz_mino.tsv">第7章 緩和制度</option>
+    <option value="quiz_cons.tsv">第8章 保全処分</option>
+    <option value="quiz_pena.tsv">第9章 罰　則</option>
+            </select>
+        </div>
+        <div class="input-group">
+            <label>出題数</label>
+            <input type="number" id="question-count" value="5" min="1">
+        </div>
+        <button class="btn btn-next" id="start-btn" style="width:100%">クイズ開始</button>
+    </div>
 
-<div id="categorySelect" style="margin-top:30px;">
-    <h2>カテゴリーを選択</h2>
-    <div id="categoryButtons"></div>
-</div>
+    <!-- 2. クイズ実行画面 -->
+    <div id="quiz-area" class="hidden">
+        <header>
+            <span class="back-arrow" onclick="location.reload()">←</span>
+            <h1 id="cat-title">クイズ</h1>
+        </header>
 
-<div id="questionCountSelect" style="display:none; margin-top:30px;">
-    <h2>問題数を入力</h2>
-    <input id="questionCountInput" type="number" min="1" placeholder="例：5"
-           style="padding:10px; font-size:18px; width:150px;">
-    <br><br>
-    <button onclick="startQuizWithCustomCount()">開始する</button>
-</div>
+        <div class="progress-info">
+            <span id="progress-text">0 / 0</span>
+            <span>✎</span>
+        </div>
 
-<div id="container">
-    <div class="inner">
-        <h2 id="categoryTitle"></h2>
-        <h3 id="questionText"></h3>
+        <div id="question-text">読み込み中...</div>
 
-        <div id="choices"></div>
+        <ul id="choices"></ul>
 
-        <div id="resultBox"></div>
+        <div id="feedback" class="hidden">
+            <div class="feedback-title" id="result-status"></div>
+            <div id="explanation-text"></div>
+        </div>
 
-        <button onclick="prevQuestion()">前の問題</button>
-        <button onclick="nextQuestion()">次の問題</button>
-        <button onclick="showScore()">成績</button>
+        <div class="controls">
+            <button class="btn btn-prev" id="prev-btn">前へ</button>
+            <button class="btn btn-next" id="next-btn">次へ</button>
+        </div>
+    </div>
 
-        <br><br>
-
-        <button onclick="goToCategory()">挑戦開始（カテゴリーへ戻る）</button>
-
-        <div id="scoreBox"></div>
+    <!-- 3. 結果発表画面 -->
+    <div id="result-area" class="hidden">
+        <div class="result-card">
+            <h1>終了！</h1>
+            <div class="score-big" id="final-rate">0%</div>
+            <p id="final-stats"></p>
+            <div id="motivate-msg" class="alert-msg"></div>
+            <br>
+            <button class="btn btn-next" onclick="location.reload()" style="width:100%">もう一度挑戦する</button>
+        </div>
     </div>
 </div>
 
 <script>
-let allQuestions = [];
-let currentCategory = "";
-let quizList = [];
-let index = 0;
-let correctCount = 0;
+    let questions = [];
+    let currentIdx = 0;
+    let correctCount = 0;
+    let answeredIndices = {}; // 回答済みの情報を保存 {index: {selectedIdx, isCorrect}}
 
-/* ▼ TSV 読み込み */
-fetch("questions.tsv")
-    .then(res => res.text())
-    .then(text => {
-        allQuestions = parseTSV(text);
-        createCategoryButtons();
+    const startBtn = document.getElementById('start-btn');
+    const quizArea = document.getElementById('quiz-area');
+    const setupArea = document.getElementById('setup-area');
+
+    // TSV読み込み & シャッフル開始
+    startBtn.addEventListener('click', async () => {
+        const file = document.getElementById('category-select').value;
+        const countInput = document.getElementById('question-count');
+        let limit = parseInt(countInput.value);
+
+        try {
+            const res = await fetch(file);
+            const text = await res.text();
+            const rows = text.trim().split('\n').map(row => row.split('\t'));
+            
+            // データ整形 (a1が常に正解)
+            let rawData = rows.slice(1).map(r => ({
+                category: r[0], question: r[1],
+                correct: r[2], // a1を保持
+                options: [r[2], r[3], r[4], r[5]],
+                explan: r[6]
+            }));
+
+            if (limit > rawData.length) {
+                alert(`問題数が足りません。登録されている全 ${rawData.length} 問を出題します。`);
+                limit = rawData.length;
+            }
+
+            // 問題をシャッフルして抽出
+            questions = rawData.sort(() => Math.random() - 0.5).slice(0, limit);
+            
+            document.getElementById('cat-title').innerText = questions[0].category;
+            setupArea.classList.add('hidden');
+            quizArea.classList.remove('hidden');
+            renderQuestion();
+        } catch (e) {
+            alert("TSVファイルの読み込みに失敗しました。ファイル名と場所を確認してください。");
+        }
     });
 
-/* ▼ TSV パース（正解＝a1） */
-function parseTSV(text) {
-    const lines = text.trim().split("\n");
-    const data = [];
+    function renderQuestion() {
+        const q = questions[currentIdx];
+        document.getElementById('progress-text').innerText = `${currentIdx + 1} / ${questions.length}`;
+        document.getElementById('question-text').innerText = q.question;
+        const choicesUl = document.getElementById('choices');
+        const feedback = document.getElementById('feedback');
+        
+        choicesUl.innerHTML = '';
+        feedback.classList.add('hidden');
 
-    for (let i = 1; i < lines.length; i++) {
-        const cols = lines[i].replace(/^\uFEFF/, "").split("\t");
-        if (cols.length < 7) continue;
+        // 選択肢のシャッフル (回答済みの場合はその時の順序を維持するのが理想ですが、簡易化のため表示の度シャッフル)
+        const displayOptions = [...q.options].sort(() => Math.random() - 0.5);
 
-        const [category, q, a1, a2, a3, a4, explain] = cols;
-
-        data.push({
-            category,
-            question: q,
-            choices: [a1, a2, a3, a4],
-            correctText: a1,   // ★ 正解は必ず a1
-            explain
+        displayOptions.forEach(txt => {
+            const li = document.createElement('li');
+            li.innerText = txt;
+            
+            // 既に回答済みの場合の表示再現
+            if (answeredIndices[currentIdx]) {
+                if (txt === q.correct) li.classList.add('correct');
+                else if (txt === answeredIndices[currentIdx].selected) li.classList.add('wrong');
+                showFeedback(answeredIndices[currentIdx].isCorrect);
+            } else {
+                li.onclick = () => selectAnswer(li, txt, q.correct, q.explan);
+            }
+            choicesUl.appendChild(li);
         });
-    }
-    return data;
-}
 
-/* ▼ カテゴリーボタン生成 */
-function createCategoryButtons() {
-    const area = document.getElementById("categoryButtons");
-    area.innerHTML = "";
-
-    const categories = [...new Set(allQuestions.map(q => q.category))];
-
-    categories.forEach(cat => {
-        const btn = document.createElement("button");
-        btn.textContent = cat;
-        btn.onclick = () => startCategory(cat);
-        area.appendChild(btn);
-    });
-
-    const totalBtn = document.createElement("button");
-    totalBtn.textContent = "総合（全カテゴリ）";
-    totalBtn.onclick = () => startCategory("総合");
-    area.appendChild(totalBtn);
-}
-
-/* ▼ カテゴリー選択後 */
-function startCategory(cat) {
-    currentCategory = cat;
-    document.getElementById("categorySelect").style.display = "none";
-    document.getElementById("questionCountSelect").style.display = "block";
-}
-
-/* ▼ シャッフル */
-function shuffle(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
-/* ▼ 問題数入力後に開始 */
-function startQuizWithCustomCount() {
-    const input = document.getElementById("questionCountInput").value;
-    let count = parseInt(input);
-
-    if (!count || count <= 0) {
-        alert("1以上の数字を入力してください");
-        return;
+        document.getElementById('prev-btn').disabled = (currentIdx === 0);
+        document.getElementById('next-btn').innerText = (currentIdx === questions.length - 1) ? "結果を見る" : "次へ";
     }
 
-    let list = (currentCategory === "総合")
-        ? [...allQuestions]
-        : allQuestions.filter(q => q.category === currentCategory);
-
-    list = shuffle(list);
-
-    if (count > list.length) {
-        alert("問題数が多すぎるため、最大の " + list.length + " 問に設定しました。");
-        count = list.length;
+    function selectAnswer(el, selected, correct, explan) {
+        const isCorrect = (selected === correct);
+        answeredIndices[currentIdx] = { selected: selected, isCorrect: isCorrect };
+        
+        if (isCorrect) {
+            el.classList.add('correct');
+            correctCount++;
+        } else {
+            el.classList.add('wrong');
+            // 正解を強調表示
+            Array.from(document.querySelectorAll('#choices li')).forEach(li => {
+                if (li.innerText === correct) li.classList.add('correct');
+            });
+        }
+        showFeedback(isCorrect);
     }
 
-    quizList = list.slice(0, count);
-
-    index = 0;
-    correctCount = 0;
-
-    document.getElementById("questionCountSelect").style.display = "none";
-    document.getElementById("container").style.display = "block";
-
-    showQuestion();
-}
-
-/* ▼ 問題表示 */
-function showQuestion() {
-    const q = quizList[index];
-
-    document.getElementById("categoryTitle").textContent = "【" + currentCategory + "】";
-    document.getElementById("questionText").textContent = (index + 1) + ". " + q.question;
-
-    let choiceObjects = q.choices.map(text => ({
-        text,
-        isCorrect: (text === q.correctText)
-    }));
-
-    choiceObjects = shuffle(choiceObjects);
-
-    const choicesDiv = document.getElementById("choices");
-    choicesDiv.innerHTML = "";
-
-    choiceObjects.forEach(obj => {
-        const div = document.createElement("div");
-        div.className = "choice";
-        div.textContent = obj.text;
-        div.onclick = () => checkAnswer(obj.isCorrect, q);
-        choicesDiv.appendChild(div);
-    });
-
-    document.getElementById("resultBox").style.display = "none";
-}
-
-/* ▼ 解答チェック */
-function checkAnswer(isCorrect, q) {
-    const resultBox = document.getElementById("resultBox");
-    resultBox.style.display = "block";
-
-    if (isCorrect) {
-        resultBox.innerHTML = "<b>正解！</b><br>" + q.explain;
-        correctCount++;
-    } else {
-        resultBox.innerHTML =
-            "<b>不正解…</b><br>正解は「" + q.correctText + "」<br>" + q.explain;
-    }
-}
-
-/* ▼ 前へ */
-function prevQuestion() {
-    if (index > 0) {
-        index--;
-        showQuestion();
-    }
-}
-
-/* ▼ 次へ */
-function nextQuestion() {
-    if (index < quizList.length - 1) {
-        index++;
-        showQuestion();
-    }
-}
-
-/* ▼ 成績表示（太字＋ボタン色） */
-function showScore() {
-    const total = quizList.length;
-    const rate = Math.round((correctCount / total) * 100);
-
-    let msg = `正解数：${correctCount}/${total}（${rate}%）<br>`;
-
-    if (rate >= 80) {
-        msg += `<span style="color:#ff6600; font-weight:bold;">🔥 この調子で合格をつかもう！</span>`;
-    } else {
-        msg += `<span style="color:#ff6600; font-weight:bold;">⚠️ 合格ライン 80% をキープしよう！</span>`;
+    function showFeedback(isCorrect) {
+        const feedback = document.getElementById('feedback');
+        document.getElementById('result-status').innerText = isCorrect ? "⭕ 正解" : "❌ 不正解";
+        document.getElementById('explanation-text').innerText = questions[currentIdx].explan;
+        feedback.classList.remove('hidden');
     }
 
-    document.getElementById("scoreBox").innerHTML = msg;
-}
+    // ボタン操作
+    document.getElementById('next-btn').onclick = () => {
+        if (!answeredIndices[currentIdx]) {
+            alert("回答を選択してください");
+            return;
+        }
+        if (currentIdx < questions.length - 1) {
+            currentIdx++;
+            renderQuestion();
+        } else {
+            showFinalResult();
+        }
+    };
 
-/* ▼ カテゴリーへ戻る */
-function goToCategory() {
-    document.getElementById("container").style.display = "none";
-    document.getElementById("questionCountSelect").style.display = "none";
-    document.getElementById("categorySelect").style.display = "block";
+    document.getElementById('prev-btn').onclick = () => {
+        if (currentIdx > 0) {
+            currentIdx--;
+            renderQuestion();
+        }
+    };
 
-    index = 0;
-    correctCount = 0;
-    quizList = [];
-    document.getElementById("scoreBox").innerHTML = "";
-    document.getElementById("resultBox").style.display = "none";
-    document.getElementById("questionCountInput").value = "";
-}
+    function showFinalResult() {
+        quizArea.classList.add('hidden');
+        document.getElementById('result-area').classList.remove('hidden');
+        
+        const rate = Math.round((correctCount / questions.length) * 100);
+        document.getElementById('final-rate').innerText = `${rate}%`;
+        document.getElementById('final-stats').innerText = `出題: ${questions.length}問 / 正解: ${correctCount}問`;
+        
+        const msgBox = document.getElementById('motivate-msg');
+        if (rate >= 80) {
+            msgBox.innerText = "おめでとうございます！合格基準クリアです。";
+            msgBox.className = "alert-msg bg-success";
+        } else {
+            msgBox.innerText = "合格まであと一歩！80%以上をキープできるよう復習しましょう。";
+            msgBox.className = "alert-msg bg-error";
+        }
+    }
 </script>
 
 </body>
 </html>
-
